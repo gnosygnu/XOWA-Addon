@@ -1,0 +1,21 @@
+<NotepadPlus>
+    <Project name="XOWA Addon">
+        <File name="extension\install.rdf" />
+        <File name="extension\chrome.manifest" />
+        <File name="extension\components\xowa-protocol.js" />
+        <File name="extension\modules\xowa-interface.jsm" />
+        <File name="extension\modules\xowa-connection.jsm" />
+        <File name="extension\modules\socket.jsm" />
+        <File name="extension\modules\logger.jsm" />
+        <File name="extension\modules\timer.jsm" />
+        <File name="extension\defaults\preferences\prefs.js" />
+    </Project>
+    <Project name="XOWA Addon support">
+        <File name="elemHideHitRegistration.js" />
+        <File name="mozSocket.jsm" />
+        <File name="nieu&#x017C;ytki.js" />
+        <File name="E:\Piotrek\Documents\XOWA-addon\xowa_source_v0.7.3.2\dev\400_xowa\xtn\gplx\xowa\Xowa_tcp_console.java" />
+        <File name="testy.js" />
+        <File name="issues.txt" />
+    </Project>
+</NotepadPlus>

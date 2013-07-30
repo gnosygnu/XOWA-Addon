@@ -1,0 +1,8 @@
+<!ENTITY xowa_viewer.label "Your localized menuitem">
+<!ENTITY xowa_viewerContext.label "Your Menuitem">
+<!ENTITY xowa_viewerContext.accesskey "Y">
+<!ENTITY xowa_viewerToolbarButton.label "Your Toolbar Button">
+<!ENTITY xowa_viewerToolbarButton.tooltip "This is your toolbar button!">
+<!ENTITY xowa_viewerSidebar.label "Your Sidebar">
+<!ENTITY xowa_viewerToolbar.name  "example">
+<!ENTITY xowa_viewerToolbar.label "This is an example toolbar. You can hide it under View &gt; toolbars &gt; &xowa_viewerToolbar.name;">
