@@ -105,7 +105,7 @@ XowaConnection.prototype =
                         _this.server_response_part_timeout.setTimeout(function() { 
                             if(_this.is_exchange)
                             {
-                                Logger.log("Timeout of start getting response from server");
+                                Logger.log("Timeout of starting get response from server");
                                 _this.is_exchange = false;
                                 _this.server_response_part_timeout = null;
                                 _this.send_response(null, "TIME_OUT");

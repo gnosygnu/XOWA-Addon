@@ -5,3 +5,6 @@ locale    xowa_viewer   en-US         chrome/locale/en-US/
 
 component {252ebb45-4342-4f98-9425-f2c3ecb3dbc3} components/xowa-protocol.js
 contract @mozilla.org/network/protocol;1?name=xowa {252ebb45-4342-4f98-9425-f2c3ecb3dbc3}
+
+component {a7926b19-97cd-4d3d-9e86-16e38adef819} components/xowa-cmd-protocol.js
+contract @mozilla.org/network/protocol;1?name=xowa-cmd {a7926b19-97cd-4d3d-9e86-16e38adef819}

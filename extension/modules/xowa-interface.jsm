@@ -131,13 +131,35 @@ var Xowa =
     /* class */ Session : XowaSession,
 
     sessions: [],
-    sessions_counter: 0,
+    sessions_counter: 0, // number of sessions and also part of name of next session (if =0 then next session id =session_0)
     new_session: function()
     {
+        var session = new Xowa.Session("session_"+(this.sessions_counter));
+        this.sessions[this.sessions_counter] = session;
         this.sessions_counter++;
-        var session = new Xowa.Session("session_"+this.sessions_counter);
-        this.sessions.push(session);
         return session;
+    },
+    
+    get_session_by_id : function(_id)
+    {
+        var session = null;
+        for(var i = 0; i < this.sessions_counter; i++)
+            if(this.sessions[i] && this.sessions[i].id === _id)
+            {
+                session = this.sessions[i];
+                break;
+            }
+        return session;
+    },
+    
+    delete_session_by_id : function(_id)
+    {
+        for(var i = 0; i < this.sessions_counter; i++)
+            if(this.sessions[i] && this.sessions[i].id === _id)
+            {
+                delete this.sessions[i];
+                break;
+            }
     },
     
     
@@ -190,7 +212,10 @@ XowaSession.prototype =
         );
     },
     
-    close: function() { /* nothing here now */}
+    close: function() 
+    {
+        Xowa.delete_session_by_id(this.id);
+    }
 };
 
 ////////////////////////////////////////////////////////////////////

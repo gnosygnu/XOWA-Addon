@@ -15,8 +15,8 @@ pref("extensions.xowa_viewer.local_server_port", "55001"); // Port of local serv
 
 pref("extensions.xowa_viewer.xowa_connection.connecting_to_xowa.timeout", "4000"); // Connecting to xowa timeout in miliseconds; 
 pref("extensions.xowa_viewer.xowa_connection.connecting_to_xowa.trials", "3"); // max number of connecting to XOWA trials
-pref("extensions.xowa_viewer.xowa_connection.response_from_xowa.first_part.timeout", "15000"); // Timeout of waiting for starting getting response from Xowa (getting first part of response) - in miliseconds; 
+pref("extensions.xowa_viewer.xowa_connection.response_from_xowa.first_part.timeout", "20000"); // Timeout of waiting for starting getting response from Xowa (getting first part of response) - in miliseconds; 
 pref("extensions.xowa_viewer.xowa_connection.response_from_xowa.next_parts.timeout", "4000"); // Timeout of waiting for next parts of response from XOWA miliseconds; 
-pref("extensions.xowa_viewer.debug.show_xowa_console.win", false); // Show console in Windows (in linux probably this would work --> http://www.java.com/en/download/help/enable_console_linux.xml)
+pref("extensions.xowa_viewer.debug.show_xowa_console.win", false); // Show console in Windows (in linux probably this would work --> http://www.java.com/en/download/help/enable_console_linux.xml )
 
 

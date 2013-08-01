@@ -1,19 +1,28 @@
-
-var kSCHEME = "xowa";
-var kPROTOCOL_NAME = "Search Protocol";
-var kPROTOCOL_CONTRACTID = "@mozilla.org/network/protocol;1?name=" + kSCHEME;
-var kPROTOCOL_CID = Components.ID("252ebb45-4342-4f98-9425-f2c3ecb3dbc3");
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
+Components.utils.import("resource://xowa_viewer/logger.jsm");
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
 var Cu = Components.utils;
-var nsIProtocolHandler = Ci.nsIProtocolHandler;
 var nsIIOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://gre/modules/FileUtils.jsm");
-Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
-Components.utils.import("resource://xowa_viewer/logger.jsm");
+
+var kSCHEME = "xowa";
+var kPROTOCOL_CONTRACTID = "@mozilla.org/network/protocol;1?name=" + kSCHEME;
+var kPROTOCOL_CID = Components.ID("252ebb45-4342-4f98-9425-f2c3ecb3dbc3");
+
+function resolve_url(_base_url, _relative_url)
+{  // ugly trick
+    var base_url_scheme = _base_url.substring(0, _base_url.indexOf(":"));
+    var base_after_protocol = _base_url.substr(base_url_scheme.length+1);
+    var temp_base = "http:" + (base_after_protocol.substr(0,2)=="//" ?"" :"//") + base_after_protocol;
+    var baseURI = nsIIOService.newURI(temp_base, null, null);
+    var temp_abs = nsIIOService.newURI(_relative_url, null, baseURI).spec;
+    var absolute_url = base_url_scheme + ":" + temp_abs.substr("http:".length);
+    
+    return absolute_url;
+} 
  
 
 function XowaProtocol() {
@@ -23,15 +32,10 @@ XowaProtocol.prototype =
 {
     scheme: kSCHEME,
     defaultPort: -1,
-    protocolFlags: 
-        /*nsIProtocolHandler.URI_DANGEROUS_TO_LOAD | 
-        nsIProtocolHandler.URI_LOADABLE_BY_ANYONE | 
-        */nsIProtocolHandler.URI_IS_LOCAL_FILE | 
-        nsIProtocolHandler.URI_IS_LOCAL_RESOURCE | 
-        nsIProtocolHandler.URI_STD /*| 
-        nsIProtocolHandler.URI_NOAUTH*/ /*| 
-        nsIProtocolHandler.URI_INHERITS_SECURITY_CONTEXT*/ /*|
-        nsIProtocolHandler.URI_OPENING_EXECUTES_SCRIPT*/,
+    protocolFlags: // ref: https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIProtocolHandler#Constants (unfortunately not precise)
+        Ci.nsIProtocolHandler.URI_DANGEROUS_TO_LOAD |  // not loadable by websites, local files, only by chrome
+        Ci.nsIProtocolHandler.URI_STD | 
+        Ci.nsIProtocolHandler.URI_NOAUTH,
 
     newURI: function(aSpec, aOriginCharset, aBaseURI)
     {
@@ -42,61 +46,17 @@ XowaProtocol.prototype =
         }
         else 
         {
-            // var re = /^[^:]+:\/*([^\/]+).*/;
-            // var domain =  re.exec(aBaseURI.spec)[1]; // eg in "xowa://simple.wikipedia.org/wiki/Earth" "simple.wikipedia.org" is domain
-            // if(aBaseURI.spec[aBaseURI.spec.length-1]=="\\")
-                // without_slash = /^(.*)\\*$/
-            // var parent_url = "xowa://simple.wikipedia.org/wiki";
-            // Logger.log(aSpec);
-            // if(aSpec.substr(0,5) == "file:")
-            // {
-                // Logger.log("bug here");
-                // uri.spec = aSpec;
-            // }
-            // else if(aSpec.substr(0,2) == "//") // protocol scope e.g curr URL = xowa://simple.wikipedia.org/wiki/Earth , url is //en.wikipedia.org/wiki/Earth, then really (absolute) URL will be xowa://en.wikipedia.org/wiki/Earth
-            // {
-                // uri.spec = kSCHEME + aSpec;
-            // }
-            // else if(aSpec[0]=="/") // domain scope e.g curr URL = xowa://en.wikipedia.org/wiki/Earth , url is /wiki/Sun, then really (absolute) URL will be xowa://en.wikipedia.org/wiki/Sun
-            // {
-                // uri.spec = kSCHEME + ":" + domain + aSpec;
-            // }
-            // else if(aSpec.substr(0,2) =="./") // base url scope e.g curr URL = xowa://en.wikipedia.org/wiki/Earth , url is ./Sun, then really (absolute) URL will be xowa://en.wikipedia.org/wiki/Sun
-            // {
-                // uri.spec = parent_url + aSpec.substr(1); // change "." to parent_url
-            // }
-            // else if(aSpec[0]=="#") // bookmark
-            // {
-                // uri.spec = aBaseURI.spec + aSpec;
-            // }
-            // else // base url scope e.g curr URL = xowa://en.wikipedia.org/wiki/Earth , url is Sun, then really (absolute) URL will be xowa://en.wikipedia.org/wiki/Sun 
-            // {
-                // uri.spec = parent_url + "/" + aSpec;
-            // }
-            // TODO interpreting /../ , <START>../ , /..<END>
-            
-            
-            // Logger.log(aBaseURI.resolve(aSpec)); // BUG : returns aSpec. wtf?
-            // uri.spec = aBaseURI.resolve(aSpec); // convert relative uri to absolute
-            
             if(aSpec.substr(0, 6) == "/site/") // urls like ""/site/home/wiki/Main Page" are absolute urls to url like "home/wiki/Main Page"
             {
                 uri.spec = kSCHEME + ":" + aSpec.substr(6);
             }
             else if(aSpec.substr(0, 5) == "xowa:") // xowa:... means: run xowa insternal command
             {
-                uri.spec = kSCHEME + ":" + aSpec.substr(5); // temporary; TODO 
+                uri.spec = "xowa-cmd" + ":" + aSpec.substr(5);
             }
-            else
+            else // resolving relative -> absolute uri
             {
-                // resolving relative -> absolute uri - temporary workaraud of resolve() issue
-                var ioService = Components.classes["@mozilla.org/network/io-service;1"]
-                              .getService(Components.interfaces.nsIIOService);
-                var base_after_protocol = aBaseURI.spec.substr(kSCHEME.length+1);
-                var temp_base = "http:" + (base_after_protocol.substr(0,2)=="//" ?"" :"//") + base_after_protocol;
-                var baseURI = ioService.newURI(temp_base, null, null);
-                var temp_abs = ioService.newURI(aSpec, null, baseURI).spec;
-                uri.spec = "xowa:" + temp_abs.substr("http:".length);
+                uri.spec = resolve_url(aBaseURI.spec, aSpec);
             }
         }
         
@@ -112,7 +72,6 @@ XowaProtocol.prototype =
     classID: Components.ID(kPROTOCOL_CID),
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
 };
-
 
 // inspirated and based on: https://addons.mozilla.org/pl/firefox/files/browse/220262/file/lib/elemHideHitRegistration.js#L88
 /* class */ function XowaChannel(_uri)
@@ -151,11 +110,11 @@ XowaChannel.prototype =
         
         var session = Xowa.new_session();
         session.init();
+
         var xowa_cmd = "app.shell.fetch_page('"+this.xowa_resource+"', 'html');"; // POT. TODO: it is weak for xowa commands injections
         session.run_xowa_cmd_async(xowa_cmd,"xowa.cmd.exec", 
         function(_result, _result_type, _connection_status) 
         {
-            var in_stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
             var page_source;
             
             switch(_connection_status)
@@ -186,10 +145,52 @@ XowaChannel.prototype =
                 break;
             }
             
+            var in_stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
+        
             in_stream.setData(page_source, page_source.length);
             _listener.onDataAvailable(/* nsIRequest */ this_channel, _context, in_stream, 0, in_stream.available());
             _listener.onStopRequest(/* nsIRequest */ this_channel, _context, Cr.NS_OK);
+            
+            var window = this_channel._getInterface(Ci.nsIDOMWindow); // window created using this protocol
+            window.document.addEventListener("DOMContentLoaded",  // html parsed, dom created but subresources not loaded yet
+            function()
+            {
+                window.XowaPageInfo = {session_id: session.id};
+                
+                // inject API
+                var new_script = window.document.createElement("script");
+                new_script.src = "chrome://xowa_viewer/content/xowa-page.js";
+                window.document.getElementsByTagName('head')[0].appendChild(new_script);
+            }, false); // we don't need the listener anymore
+            
+            window.document.addEventListener("unload", 
+            function()
+            {   
+                session.close();
+            }, false);
+
+            
         });
+    },
+    
+    _getInterface :function(iface)
+    {
+        var request=this;
+        try
+        {
+            if (request.notificationCallbacks)
+                return request.notificationCallbacks.getInterface(iface);
+        }
+        catch (e) {}
+
+        try
+        {
+            if (request.loadGroup && request.loadGroup.notificationCallbacks)
+                return request.loadGroup.notificationCallbacks.getInterface(iface);
+        }
+        catch (e) {}
+        
+        return null;
     },
 
     /* sync */ open: function()

@@ -17,7 +17,8 @@ var nsIThreadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThre
 
 // TCP Reference: http://en.wikipedia.org/wiki/Transmission_Control_Protocol
 
-// Highly inspirated by mozSocket.jsm (view-source:http://hg.instantbird.org/experiments/raw-file/d4326febed80/modules/mozSocket.jsm) 
+// Highly inspirated by mozSocket.jsm but written by me (view-source:http://hg.instantbird.org/experiments/raw-file/d4326febed80/modules/mozSocket.jsm) 
+
 
 // Network errors from mozSocket.jsm
 var NS_ERROR_MODULE_NETWORK = 2152398848;
@@ -165,10 +166,11 @@ Socket.prototype =
     this.remote_port = _outbound_port; 
     this.timeout = _timeout; 
     this.connection_trials_number = _connection_trials_number; 
-    Socket.call(this);
+    
+    Socket.call(this); // call Socket constructor
 }
 
-SocketClient.prototype = new Socket();
+SocketClient.prototype = new Socket(); // inherit Socket class
 SocketClient.prototype.constructor = SocketClient;
 
 SocketClient.prototype.connecting = false; // socket is trying connecting to server

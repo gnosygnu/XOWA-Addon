@@ -3,6 +3,8 @@
         <File name="extension\install.rdf" />
         <File name="extension\chrome.manifest" />
         <File name="extension\components\xowa-protocol.js" />
+        <File name="extension\chrome\content\xowa-page.js" />
+        <File name="extension\components\xowa-cmd-protocol.js" />
         <File name="extension\modules\xowa-interface.jsm" />
         <File name="extension\modules\xowa-connection.jsm" />
         <File name="extension\modules\socket.jsm" />

@@ -7,18 +7,24 @@ var Cr = Components.results;
 var Cu = Components.utils;
 var nsIConsoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
 var nsIAlertsService = Cc['@mozilla.org/alerts-service;1'].getService(Ci.nsIAlertsService);
+var nsIPromptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
 
 var Logger = 
 {
+    title: "XOWA Viewer",
+    
     log: function log(msg)
     {
-        this._log("XOWA Viewer: " + msg);
+        this._log(this.title+": " + msg);
     },
 
     error: function error(msg, need_thrown)
     {debugger;
         var code_info = Components.stack.caller;
-        var log = "XOWA Viewer: " + msg + "\n" + "File: "+code_info.filename+"\n"+"Line: "+code_info.lineNumber+"\n"+"Function: "+code_info.name+(code_info.caller) ?(" (caller function: "+code_info.caller.name+")") : "";
+        var log  = this.title+": " + msg + "\n" + 
+                   "\tFile: "+code_info.filename+"\n"+
+                   "\tLine: "+code_info.lineNumber+"\n";
+        log     += "\tFunction: "+code_info.name+((code_info.caller) ?(" (caller function: "+code_info.caller.name+")") : "");
         this._error(log);
         if(need_thrown)
             throw log;
@@ -26,7 +32,12 @@ var Logger =
     
     show: function(msg)
     {
-        this._alert("XOWA Viewer", msg);
+        this._notification(this.title, msg);
+    },
+    
+    alert: function(msg)
+    {
+        this._alert(this.title, msg)
     },
     
     getMozErrorByValue: function getMozErrorByValue(value)
@@ -37,7 +48,7 @@ var Logger =
         return record;
     },
     
-    /* private */ _alert: function alert(title, message)
+    /* private */ _notification: function(title, message)
     {
         nsIAlertsService.showAlertNotification(null, title, message, false, '', null);
     }, 
@@ -45,6 +56,11 @@ var Logger =
     /* private */ _error: function(msg)
     {
         Components.utils.reportError(msg);
+    }, 
+    
+    /* private */ _alert: function(titile, msg)
+    {
+        nsIPromptService.alert(null, title, msg)
     }, 
     
     /* private */ _log: function log(msg)
