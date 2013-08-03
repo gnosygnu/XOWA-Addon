@@ -4,7 +4,7 @@
     <Description about="urn:mozilla:install-manifest">
         <em:type>2</em:type> <!-- 2 : Extension -->
         <em:id>xowa_viewer@piotrex</em:id>
-        <em:version>0.0.1</em:version>
+        <em:version>0.0.6</em:version>
         <em:name>XOWA Viewer</em:name>
         <em:creator>piotrex</em:creator>
         <em:targetApplication>
@@ -15,6 +15,8 @@
                 <em:maxVersion>25.0</em:maxVersion>
             </Description>
         </em:targetApplication>
+        <em:homepageURL>http://sourceforge.net/projects/xowa/</em:homepageURL>
+        <em:updateURL>https://raw.github.com/piotrex/XOWA-Addon/master/update.rdf</em:updateURL>
         <em:optionsURL>chrome://xowa_viewer/content/options.xul</em:optionsURL>
     </Description>
 </RDF>

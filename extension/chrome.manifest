@@ -1,6 +1,5 @@
 content   xowa_viewer                 chrome/content/
 resource  xowa_viewer                 modules/
-skin      xowa_viewer   classic/1.0   chrome/skin/
 locale    xowa_viewer   en-US         chrome/locale/en-US/
 
 component {252ebb45-4342-4f98-9425-f2c3ecb3dbc3} components/xowa-protocol.js

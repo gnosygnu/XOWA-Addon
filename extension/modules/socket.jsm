@@ -1,3 +1,13 @@
+/* 
+  Copyright (c) 2013, Piotr Romaniak <piotrekrom7 at Google Gmail>
+  
+  This file is part of the XOWA Firefox Addon  
+  
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
 var EXPORTED_SYMBOLS = ["SocketServer", "SocketClient"];
 
 var Cc = Components.classes;
@@ -15,10 +25,9 @@ var nsIThreadManager = Cc["@mozilla.org/thread-manager;1"].getService(Ci.nsIThre
 
 // General classes to handling sockets in Firefox but not implemented features that connection with Xowa doesn't need
 
+// Highly inspirated by mozSocket.jsm but rewritten completely (view-source:http://hg.instantbird.org/experiments/raw-file/d4326febed80/modules/mozSocket.jsm) 
+
 // TCP Reference: http://en.wikipedia.org/wiki/Transmission_Control_Protocol
-
-// Highly inspirated by mozSocket.jsm but written by me (view-source:http://hg.instantbird.org/experiments/raw-file/d4326febed80/modules/mozSocket.jsm) 
-
 
 // Network errors from mozSocket.jsm
 var NS_ERROR_MODULE_NETWORK = 2152398848;

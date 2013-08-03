@@ -1,0 +1,34 @@
+<!-- ref: https://developer.mozilla.org/en-US/docs/Extension_Versioning,_Update_and_Compatibility#Update_RDF_Format -->
+
+<?xml version="1.0" encoding="UTF-8"?>
+
+<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+
+  <RDF:Description about="urn:mozilla:extension:xowa_viewer@piotrex">
+    <em:updates>
+      <RDF:Seq>
+
+        <!-- Each li is a different version of the same add-on -->
+        <RDF:li>
+          <RDF:Description>
+            <em:version>0.0.6</em:version>
+
+            <em:targetApplication>
+              <RDF:Description>
+                <em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
+                <em:minVersion>3.0.*</em:minVersion> <!-- TODO -->
+                <em:maxVersion>25.0</em:maxVersion>
+                <em:updateLink>https://raw.github.com/piotrex/XOWA-Addon/master/xowa_viewer.xpi</em:updateLink>
+
+              </RDF:Description>
+            </em:targetApplication>
+          </RDF:Description>
+        </RDF:li>
+
+      </RDF:Seq>
+    </em:updates>
+
+    </RDF:Description>
+</RDF:RDF>

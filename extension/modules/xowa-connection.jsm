@@ -1,3 +1,13 @@
+/* 
+  Copyright (c) 2013, Piotr Romaniak <piotrekrom7 at Google Gmail>
+  
+  This file is part of the XOWA Firefox Addon  
+  
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
 // Definitions:
 //  Exchange - in communication with Xowa: request and matching responses (one or maybe potentially more...). All communication with Xowa is series of exchanges
 //  Message - request or response. Messages can be sended in message parts
@@ -26,6 +36,9 @@ XowaConnection.prototype =
     prefs:null,
     client_socket:null,
     server_socket:null,
+    local_host:null,
+    local_server_port:null,
+    remote_server_port:null,
     input_buffer: "",
     responses_buffer: [],
     msg_parts_delim: "|",
@@ -37,6 +50,10 @@ XowaConnection.prototype =
     start: function(_host, _outbound_port, _inbound_port)
     {debugger;
         this.xowa_server_is_running = true; // TODO
+        
+        this.local_host = _host;
+        this.local_server_port = _inbound_port;
+        this.remote_server_port = _outbound_port;
         
         this.client_socket = new SocketClient(
             _host, 
@@ -53,9 +70,28 @@ XowaConnection.prototype =
         );
     },
     
+    restart : function()
+    {
+        Logger.log("Restarting connection", true);
+        this.close();
+        this.start(this.local_host, this.remote_server_port, this.local_server_port);
+    },
+    
     close: function()
     {
         Logger.log("Closing connection to Xowa");
+        if(this.is_exchange)
+        {
+            this.is_exchange = false;
+            Logger.log("Warning: Last exchange wasn't ended.");
+        }
+
+        if(this.requests_pending.length > 0)
+        {
+            this.requests_pending = [];
+            Logger.log("Warning: there was requests waiting for response");
+        }
+        
         if(this.input_buffer.length > 0)
         {
             this.input_buffer = "";
@@ -80,7 +116,9 @@ XowaConnection.prototype =
         if(this.is_exchange)
         {
             this.is_exchange = false;
-            Logger.error("Last exchange isn't ended.", true); //TODO request buffer
+            Logger.error("Warning: Last exchange isn't ended."); //TODO request buffer
+            this.send_response(null, "FATAL");
+            this.restart();
         }
         else
         {
@@ -95,7 +133,7 @@ XowaConnection.prototype =
                 switch(_status)
                 {
                 case "CONNECTED":
-                    if(_this.is_exchange) // if not response to protocol has been sended yet.
+                    if(_this.is_exchange) // if response hasn't been sended to protocol yet.
                     {
                         _this.client_socket.send(request);
                         _this.client_socket.disconnect();

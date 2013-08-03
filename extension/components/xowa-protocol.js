@@ -1,3 +1,13 @@
+/* 
+  Copyright (c) 2013, Piotr Romaniak <piotrekrom7 at Google Gmail>
+  
+  This file is part of the XOWA Firefox Addon  
+  
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+*/
+
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
 Components.utils.import("resource://xowa_viewer/logger.jsm");
@@ -67,7 +77,7 @@ XowaProtocol.prototype =
     {
         return new XowaChannel(aURI);
     },
-    classDescription: "Xowa Protocol",
+    classDescription: "XOWA Protocol",
     contractID: kPROTOCOL_CONTRACTID,
     classID: Components.ID(kPROTOCOL_CID),
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
@@ -103,8 +113,10 @@ XowaChannel.prototype =
     asyncOpen: function(_listener, _context)
     {debugger;
         Logger.log("Protocol :: Trying get "+this.xowa_resource);
-        
+       
         var this_channel = this;
+        
+        // this_channel._getInterface(Ci.nsIProgressEventSink).onStatusChange(/* nsIRequest */ this_channel, _context, Cr.NS_OK, "Trying get "+this.xowa_resource);
         
         _listener.onStartRequest(/* nsIRequest */ this, _context);
         
@@ -161,7 +173,7 @@ XowaChannel.prototype =
                 var new_script = window.document.createElement("script");
                 new_script.src = "chrome://xowa_viewer/content/xowa-page.js";
                 window.document.getElementsByTagName('head')[0].appendChild(new_script);
-            }, false); // we don't need the listener anymore
+            });
             
             window.document.addEventListener("unload", 
             function()
@@ -195,22 +207,27 @@ XowaChannel.prototype =
 
     /* sync */ open: function()
     {
+        Logger.log("Protocol :: Called "+arguments.callee.name);
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
     isPending: function()
     {
+        Logger.log("Protocol :: Called "+arguments.callee.name);
         return false;
     },
     cancel: function()
     {
+        Logger.log("Protocol :: Called "+arguments.callee.name);
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
     suspend: function()
     {
+        Logger.log("Protocol :: Called "+arguments.callee.name);
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
     resume: function()
     {
+        Logger.log("Protocol :: Called "+arguments.callee.name);
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
 
