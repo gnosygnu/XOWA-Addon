@@ -20,4 +20,9 @@
         <File name="testy.js" />
         <File name="issues.txt" />
     </Project>
+    <Project name="xowa_exec">
+        <File name="xowa_exec\wikidata.js" />
+        <File name="xowa_exec\search_suggest.js" />
+        <File name="xowa_exec\redlinks.js" />
+    </Project>
 </NotepadPlus>
