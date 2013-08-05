@@ -61,7 +61,7 @@ XowaCmdProtocol.prototype =
     this.owner = systemPrincipal; 
     
     this.originalURI = this.URI = _uri;
-    this.xowa_cmd = _uri.spec.substring(_uri.spec.indexOf(":") + 1, _uri.spec.length); 
+    this.xowa_cmd = decodeURIComponent(_uri.spec.substring(_uri.spec.indexOf(":") + 1, _uri.spec.length)); 
 }
 
 
@@ -96,7 +96,7 @@ XowaCmdChannel.prototype =
             return;
         }
         
-        var session = Xowa.get_session_by_id(window.XowaPageInfo.session_id);
+        var session = Xowa.sessions[window.XowaPageInfo.session_id];
         
         session.run_xowa_cmd_async(this.xowa_cmd,"xowa.cmd.exec", 
         function(_result, _result_type, _connection_status) 

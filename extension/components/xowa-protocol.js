@@ -50,25 +50,28 @@ XowaProtocol.prototype =
     newURI: function(aSpec, aOriginCharset, aBaseURI)
     {
         var uri = Cc["@mozilla.org/network/simple-uri;1"].createInstance(Ci.nsIURI);
+        var new_url;
         if(aBaseURI === null)      
         {
-            uri.spec = aSpec;
+            new_url = aSpec;
         }
         else 
         {
             if(aSpec.substr(0, 6) == "/site/") // urls like ""/site/home/wiki/Main Page" are absolute urls to url like "home/wiki/Main Page"
             {
-                uri.spec = kSCHEME + ":" + aSpec.substr(6);
+                new_url = kSCHEME + ":" + aSpec.substr(6);
             }
             else if(aSpec.substr(0, 5) == "xowa:") // xowa:... means: run xowa insternal command
             {
-                uri.spec = "xowa-cmd" + ":" + aSpec.substr(5);
+                new_url = "xowa-cmd" + ":" + aSpec.substr(5); 
             }
             else // resolving relative -> absolute uri
             {
-                uri.spec = resolve_url(aBaseURI.spec, aSpec);
+                new_url = resolve_url(aBaseURI.spec, aSpec);
             }
         }
+        new_url = decodeURIComponent(new_url); // for not displaying escape sequences in status bar
+        uri.spec = new_url;
         
         return uri;
     },
@@ -83,7 +86,7 @@ XowaProtocol.prototype =
     QueryInterface: XPCOMUtils.generateQI([Ci.nsIProtocolHandler])
 };
 
-// inspirated and based on: https://addons.mozilla.org/pl/firefox/files/browse/220262/file/lib/elemHideHitRegistration.js#L88
+// inspirated by: https://addons.mozilla.org/pl/firefox/files/browse/220262/file/lib/elemHideHitRegistration.js#L88
 /* class */ function XowaChannel(_uri)
 {
     var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal); 
@@ -116,17 +119,16 @@ XowaChannel.prototype =
        
         var this_channel = this;
         
-        // this_channel._getInterface(Ci.nsIProgressEventSink).onStatusChange(/* nsIRequest */ this_channel, _context, Cr.NS_OK, "Trying get "+this.xowa_resource);
-        
         _listener.onStartRequest(/* nsIRequest */ this, _context);
         
         var session = Xowa.new_session();
-        session.init();
 
-        var xowa_cmd = "app.shell.fetch_page('"+this.xowa_resource+"', 'html');"; // POT. TODO: it is weak for xowa commands injections
+        var xowa_res_escaped = this.xowa_resource.replace("'", "%27");
+        var xowa_cmd = "app.shell.fetch_page('"+xowa_res_escaped+"', 'html');"; // POT. TODO: it is weak for xowa commands injections
         session.run_xowa_cmd_async(xowa_cmd,"xowa.cmd.exec", 
         function(_result, _result_type, _connection_status) 
         {
+            Logger.log("Protocol :: After command "+xowa_cmd+" received\n"+_result.substr(0,100)+"[...]");
             var page_source;
             
             switch(_connection_status)
@@ -138,7 +140,6 @@ XowaChannel.prototype =
                     page_source = _result;
                     break;
                 case "xowa.cmd.error":  // TODO
-                    Logger.error("Xowa returned error "+_result+" after run "+xowa_cmd);
                     page_source = "Xowa returned error "+_result+" after run "+xowa_cmd;
                     break;
                 }
@@ -178,10 +179,8 @@ XowaChannel.prototype =
             window.document.addEventListener("unload", 
             function()
             {   
-                session.close();
-            }, false);
-
-            
+                Xowa.end_session(window.XowaPageInfo.session_id);
+            });
         });
     },
     

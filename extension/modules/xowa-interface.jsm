@@ -140,38 +140,23 @@ var Xowa =
     
     /* class */ Session : XowaSession,
 
-    sessions: [],
-    sessions_counter: 0, // number of sessions and also part of name of next session (if =0 then next session id =session_0)
+    sessions: {},
+    sessions_counter: 0, // number of all sessions (closed or open) and also part of name of next session (if =0 then next session id =session_0)
     new_session: function()
     {
-        var session = new Xowa.Session("session_"+(this.sessions_counter));
-        this.sessions[this.sessions_counter] = session;
+        var id = "session_"+(this.sessions_counter);
+        var session = new Xowa.Session(id);
+        session.init();
+        this.sessions[id] = session;
         this.sessions_counter++;
         return session;
     },
     
-    get_session_by_id : function(_id)
+    end_session: function(_id)
     {
-        var session = null;
-        for(var i = 0; i < this.sessions_counter; i++)
-            if(this.sessions[i] && this.sessions[i].id === _id)
-            {
-                session = this.sessions[i];
-                break;
-            }
-        return session;
+        this.sessions[id].close();
+        delete this.sessions[id];
     },
-    
-    delete_session_by_id : function(_id)
-    {
-        for(var i = 0; i < this.sessions_counter; i++)
-            if(this.sessions[i] && this.sessions[i].id === _id)
-            {
-                delete this.sessions[i];
-                break;
-            }
-    },
-    
     
     // msg: text sended to Xowa by Interface
     send_msg_async : function(_msg_body, /* function(_response_msg) */ _callback)
@@ -180,7 +165,6 @@ var Xowa =
             Xowa.Interface.init();
         this.Interface.connection.send_request_async(_msg_body, _callback);
     },
-    
     
 // private: 
 
@@ -222,10 +206,7 @@ XowaSession.prototype =
         );
     },
     
-    close: function() 
-    {
-        Xowa.delete_session_by_id(this.id);
-    }
+    close: function() { /* nothing here now */ }
 };
 
 ////////////////////////////////////////////////////////////////////

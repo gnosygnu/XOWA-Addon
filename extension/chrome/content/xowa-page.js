@@ -11,7 +11,7 @@
 Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
 Components.utils.import("resource://xowa_viewer/logger.jsm");
 
-var session = Xowa.get_session_by_id(window.XowaPageInfo.session_id);
+var session = Xowa.sessions[window.XowaPageInfo.session_id];
 
 // Injecting API
 window.xowa_exec_async = function(/* function(result) */ _callback /* , arg1, arg2, ... */)
@@ -37,7 +37,9 @@ window.xowa_exec_async = function(/* function(result) */ _callback /* , arg1, ar
             {
             case "xowa.js.result":
                 Logger.log("xowa_exec :: Success and Xowa returned "+_result+" after run "+cmd);
-                _callback(_result);
+                var json_result = JSON.parse(_result);
+                var result = json_result.xowa_js_result;
+                _callback(result);
                 break;
             case "xowa.js.error":
                 Logger.error("xowa_exec :: Xowa returned error "+_result+" after run "+cmd);

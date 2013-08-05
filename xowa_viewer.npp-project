@@ -1,6 +1,7 @@
 <NotepadPlus>
     <Project name="XOWA Addon">
         <File name="extension\install.rdf" />
+        <File name="update.rdf" />
         <File name="extension\chrome.manifest" />
         <File name="extension\components\xowa-protocol.js" />
         <File name="extension\chrome\content\xowa-page.js" />
