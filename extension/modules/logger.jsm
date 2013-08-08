@@ -17,24 +17,63 @@ var Cu = Components.utils;
 var nsIConsoleService = Cc["@mozilla.org/consoleservice;1"].getService(Ci.nsIConsoleService);
 var nsIAlertsService = Cc['@mozilla.org/alerts-service;1'].getService(Ci.nsIAlertsService);
 var nsIPromptService = Cc["@mozilla.org/embedcomp/prompt-service;1"].getService(Ci.nsIPromptService);
+Components.utils.import("resource://gre/modules/FileUtils.jsm");
+Components.utils.import("resource://gre/modules/NetUtil.jsm");
 
 var Logger = 
 {
-    title: "XOWA Viewer",
+    title: "Logger", // name shown in logs
+    logging_to_file:null,
+    log_file :null,
+    log_file_path:null,
+    log_file_stream:null,
+    init_log_file :function()
+    {
+        try 
+        {
+            this.log_file = new FileUtils.File(this.log_file_path);
+            this.log_file.append(Date.now()+".log");
+        }
+        catch(e) {}
+    },
+    
+    file_append: function(msg)
+    {
+        try 
+        {
+            if( ! this.log_file )
+                this.init_log_file();
+                
+            var log_file_stream = FileUtils.openFileOutputStream(this.log_file, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_APPEND);
+
+            var log = new Date().toLocaleString() + " : " + msg + "\n\n";
+            
+            var converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"].createInstance(Ci.nsIScriptableUnicodeConverter);
+            converter.charset = "UTF-8";
+            var istream = converter.convertToInputStream(log);
+            
+            NetUtil.asyncCopy(istream, log_file_stream);
+        }
+        catch(e) {}
+    },
     
     log: function log(msg)
     {
         this._log(this.title+": " + msg);
+        dump(this.title+": " + msg+"\n\n");
+        if(this.logging_to_file) this.file_append(msg);
     },
 
     error: function error(msg, need_thrown)
-    {debugger;
+    {
         var code_info = Components.stack.caller;
-        var log  = this.title+": " + msg + "\n" + 
+        msg  =     msg + "\n" + 
                    "\tFile: "+code_info.filename+"\n"+
                    "\tLine: "+code_info.lineNumber+"\n";
-        log     += "\tFunction: "+code_info.name+((code_info.caller) ?(" (caller function: "+code_info.caller.name+")") : "");
-        this._error(log);
+        msg     += "\tFunction: "+code_info.name+((code_info.caller) ?(" (caller function: "+code_info.caller.name+")") : "");
+        this._error(this.title+": "+msg);
+        dump(this.title+": "+msg+"\n\n");
+        if(this.logging_to_file) this.file_append("ERROR :: "+msg);
         if(need_thrown)
             throw log;
     }, 
@@ -46,7 +85,7 @@ var Logger =
     
     alert: function(msg)
     {
-        this._alert(this.title, msg)
+        this._alert(this.title, msg);
     },
     
     getMozErrorByValue: function getMozErrorByValue(value)
@@ -69,7 +108,7 @@ var Logger =
     
     /* private */ _alert: function(titile, msg)
     {
-        nsIPromptService.alert(null, title, msg)
+        nsIPromptService.alert(null, title, msg);
     }, 
     
     /* private */ _log: function log(msg)

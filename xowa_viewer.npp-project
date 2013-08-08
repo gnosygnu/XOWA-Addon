@@ -8,6 +8,7 @@
         <File name="extension\components\xowa-cmd-protocol.js" />
         <File name="extension\modules\xowa-interface.jsm" />
         <File name="extension\modules\xowa-connection.jsm" />
+        <File name="extension\modules\xowa-server-process.jsm" />
         <File name="extension\modules\socket.jsm" />
         <File name="extension\modules\logger.jsm" />
         <File name="extension\modules\timer.jsm" />

@@ -13,7 +13,7 @@
         <!-- Each li is a different version of the same add-on -->
         <RDF:li>
           <RDF:Description>
-            <em:version>0.0.7</em:version>
+            <em:version>0.0.8</em:version>
 
             <em:targetApplication>
               <RDF:Description>

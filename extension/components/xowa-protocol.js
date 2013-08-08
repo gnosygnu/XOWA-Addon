@@ -11,6 +11,7 @@
 Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
 Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
 Components.utils.import("resource://xowa_viewer/logger.jsm");
+Components.utils.import("chrome://xowa_viewer/content/xowa-page.js");
 
 var Cc = Components.classes;
 var Ci = Components.interfaces;
@@ -23,7 +24,7 @@ var kPROTOCOL_CONTRACTID = "@mozilla.org/network/protocol;1?name=" + kSCHEME;
 var kPROTOCOL_CID = Components.ID("252ebb45-4342-4f98-9425-f2c3ecb3dbc3");
 
 function resolve_url(_base_url, _relative_url)
-{  // ugly trick
+{  // ugly trick but works
     var base_url_scheme = _base_url.substring(0, _base_url.indexOf(":"));
     var base_after_protocol = _base_url.substr(base_url_scheme.length+1);
     var temp_base = "http:" + (base_after_protocol.substr(0,2)=="//" ?"" :"//") + base_after_protocol;
@@ -59,7 +60,7 @@ XowaProtocol.prototype =
         {
             if(aSpec.substr(0, 6) == "/site/") // urls like ""/site/home/wiki/Main Page" are absolute urls to url like "home/wiki/Main Page"
             {
-                new_url = kSCHEME + ":" + aSpec.substr(6);
+                new_url = kSCHEME + "://" + aSpec.substr(6);
             }
             else if(aSpec.substr(0, 5) == "xowa:") // xowa:... means: run xowa insternal command
             {
@@ -70,6 +71,7 @@ XowaProtocol.prototype =
                 new_url = resolve_url(aBaseURI.spec, aSpec);
             }
         }
+        
         new_url = decodeURIComponent(new_url); // for not displaying escape sequences in status bar
         uri.spec = new_url;
         
@@ -119,16 +121,14 @@ XowaChannel.prototype =
        
         var this_channel = this;
         
-        _listener.onStartRequest(/* nsIRequest */ this, _context);
-        
         var session = Xowa.new_session();
 
         var xowa_res_escaped = this.xowa_resource.replace("'", "%27");
         var xowa_cmd = "app.shell.fetch_page('"+xowa_res_escaped+"', 'html');"; // POT. TODO: it is weak for xowa commands injections
-        session.run_xowa_cmd_async(xowa_cmd,"xowa.cmd.exec", 
-        function(_result, _result_type, _connection_status) 
+        session.run_xowa_cmd_async("xowa.cmd.exec",xowa_cmd, 
+        function(_result_type, _result , _connection_status) 
         {
-            Logger.log("Protocol :: After command "+xowa_cmd+" received\n"+_result.substr(0,100)+"[...]");
+            Logger.log("Protocol :: After command "+xowa_cmd+" received\n"+(_result ?_result.substr(0,100)+"[...]" :"(nothing) with status "+_connection_status));
             var page_source;
             
             switch(_connection_status)
@@ -159,28 +159,23 @@ XowaChannel.prototype =
             }
             
             var in_stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
-        
             in_stream.setData(page_source, page_source.length);
+            
+            _listener.onStartRequest(/* nsIRequest */ this_channel, _context);
             _listener.onDataAvailable(/* nsIRequest */ this_channel, _context, in_stream, 0, in_stream.available());
             _listener.onStopRequest(/* nsIRequest */ this_channel, _context, Cr.NS_OK);
             
             var window = this_channel._getInterface(Ci.nsIDOMWindow); // window created using this protocol
-            window.document.addEventListener("DOMContentLoaded",  // html parsed, dom created but subresources not loaded yet
-            function()
+            if(window)
             {
-                window.XowaPageInfo = {session_id: session.id};
-                
-                // inject API
-                var new_script = window.document.createElement("script");
-                new_script.src = "chrome://xowa_viewer/content/xowa-page.js";
-                window.document.getElementsByTagName('head')[0].appendChild(new_script);
-            });
-            
-            window.document.addEventListener("unload", 
-            function()
-            {   
-                Xowa.end_session(window.XowaPageInfo.session_id);
-            });
+                window.XowaPageInfo = {};
+                window.XowaPageInfo.session_id = session.id;
+                XowaPage.xowa_page_injection(window);
+            }  
+            else
+            {
+                Logger.log("Protocol :: Cannot get DOMWindow");
+            }
         });
     },
     
@@ -192,14 +187,15 @@ XowaChannel.prototype =
             if (request.notificationCallbacks)
                 return request.notificationCallbacks.getInterface(iface);
         }
-        catch (e) {}
-
-        try
+        catch (e) 
         {
-            if (request.loadGroup && request.loadGroup.notificationCallbacks)
-                return request.loadGroup.notificationCallbacks.getInterface(iface);
+            try
+            {
+                if (request.loadGroup && request.loadGroup.notificationCallbacks)
+                    return request.loadGroup.notificationCallbacks.getInterface(iface);
+            }
+            catch (e) {}
         }
-        catch (e) {}
         
         return null;
     },

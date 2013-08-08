@@ -84,7 +84,7 @@ XowaCmdChannel.prototype =
     status: Cr.NS_OK,
 
     asyncOpen: function(_listener, _context)
-    {debugger;
+    {// debugger;
         Logger.log("xowa-cmd protocol :: Trying run "+this.xowa_cmd);
         
         var this_channel = this;
@@ -98,8 +98,8 @@ XowaCmdChannel.prototype =
         
         var session = Xowa.sessions[window.XowaPageInfo.session_id];
         
-        session.run_xowa_cmd_async(this.xowa_cmd,"xowa.cmd.exec", 
-        function(_result, _result_type, _connection_status) 
+        session.run_xowa_cmd_async("xowa.cmd.exec",this.xowa_cmd, 
+        function(_result_type, _result , _connection_status) 
         {
             var page_source;
             
