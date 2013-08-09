@@ -1,0 +1,7 @@
+#xowa-viewer_button {
+  list-style-image: url("chrome://xowa_viewer/content/icon24x24.png");
+}
+
+toolbar[iconsize="small"] #xowa-viewer_button {
+  list-style-image: url("chrome://xowa_viewer/content/icon16x16.png");
+}

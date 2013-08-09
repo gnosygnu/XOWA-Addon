@@ -189,6 +189,7 @@ XowaConnection.prototype =
                     case "TIME_OUT":
                     case "CONNECTION_REFUSED":
                     case "CONNECTION_RESET":
+                    default:
                         if(_this.requests_pending[exchange_id] !== undefined) // if(exchange isn't ended already)
                         {
                             _this.send_response(exchange_id, null, null, _status);

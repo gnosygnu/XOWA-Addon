@@ -184,7 +184,7 @@ SocketClient.prototype.connecting = false; // socket is trying connecting to ser
 SocketClient.prototype.connection = null;
 SocketClient.prototype.remote_host = null;
 SocketClient.prototype.remote_port = null;
-SocketClient.prototype.onConnectionStatusChange= null; /* function(status="CONNECTED"|"TIME_OUT"|"TRIALS_ENDED"|"UNKNOWN_HOST"|"CONNECTION_REFUSED"|"CONNECTION_RESET"|"ALREADY_CONNECTED", status2="TRIALS_ENDED"|"TRYING_AGAIN"|"") */
+SocketClient.prototype.onConnectionStatusChange= null; /* function(status="CONNECTED"|"TIME_OUT"|"UNKNOWN_HOST"|"CONNECTION_REFUSED"|"CONNECTION_RESET"|"ALREADY_CONNECTED", trying_status="TRIALS_ENDED"|"TRYING_AGAIN"|"") */
 SocketClient.prototype.timeout= null; // seconds
 SocketClient.prototype.connection_trials_number= null; 
 SocketClient.prototype.curr_connection_trial= null; // number of current connecting trial;  1, 2, 3... when trying connecting, null otherwise
@@ -234,11 +234,12 @@ SocketClient.prototype.send = function(_data)
     this.connection.send(_data);
 };
 
-SocketClient.prototype.connection_trial = function() // this.connection_trials_number has to be setted
+SocketClient.prototype.connection_trial = function(_reason) // this.connection_trials_number has to be setted
 {
     if(this.curr_connection_trial < this.connection_trials_number)
     {// Try connect again
         Logger.log(this.__proto__.constructor.name+" :: Trying connect again. Remain trials: "+(this.connection_trials_number - this.curr_connection_trial));
+        this.onConnectionStatusChange(_reason, "TRYING_AGAIN");
         this.connect(this.onConnectionStatusChange);
     }
     else
@@ -246,11 +247,11 @@ SocketClient.prototype.connection_trial = function() // this.connection_trials_n
         Logger.log(this.__proto__.constructor.name+" :: Last connection failed");
         this.curr_connection_trial = null;
         this.connecting = false;
-        this.onConnectionStatusChange("TRIALS_ENDED", "TRIALS_ENDED");
+        this.onConnectionStatusChange(_reason, "TRIALS_ENDED");
     }
 };
 
-// Connection observer events implementation
+// Connection notifications observer implementation
 
 SocketClient.prototype.onTimeOut = function()
 {
@@ -259,10 +260,7 @@ SocketClient.prototype.onTimeOut = function()
     if(this.connecting)
     {
         if(this.connection_trials_number)
-        {
-            this.onConnectionStatusChange("TIME_OUT", "TRYING_AGAIN");
-            this.connection_trial();
-        }
+            this.connection_trial("TIME_OUT");
         else
         {
             this.connecting = false;
@@ -288,10 +286,7 @@ SocketClient.prototype.onConnectionReset = function()
     if(this.connecting)
     {
         if(this.connection_trials_number)
-        {
-            this.onConnectionStatusChange("CONNECTION_RESET", "TRYING_AGAIN");
-            this.connection_trial();
-        }
+            this.connection_trial("CONNECTION_RESET");
         else
         {
             this.connecting = false;
@@ -306,10 +301,7 @@ SocketClient.prototype.onConnectionRefused = function()
     if(this.connecting)
     {
         if(this.connection_trials_number)
-        {
-            this.onConnectionStatusChange("CONNECTION_REFUSED", "TRYING_AGAIN");
-            this.connection_trial();
-        }
+            this.connection_trial("CONNECTION_REFUSED");
         else
         {
             this.connecting = false;
@@ -341,7 +333,7 @@ SocketClient.prototype.onTransportStatus = function(aTransport, aStatus, aProgre
 ///////////////////////////////////////////////////////////////////
 
 /* class */ function SocketServer(_port, _this, /* function(raw_data, host, port) */ _onDataReceived)
-// Server socket allows only one connection (it stops listening after connected to a client)
+// Server socket allows multiple clients connections
 {
     this.onDataReceived = _onDataReceived;
     this.onDataReceived_this = _this;

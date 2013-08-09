@@ -92,7 +92,7 @@ XowaProtocol.prototype =
 /* class */ function XowaChannel(_uri)
 {
     var systemPrincipal = Cc["@mozilla.org/systemprincipal;1"].createInstance(Ci.nsIPrincipal); 
-    this.owner = systemPrincipal; //TODO - may be unsecure
+    this.owner = systemPrincipal; //TODO - there is no need to have chrome privileges
     
     this.originalURI = this.URI = _uri;
     this.xowa_resource = _uri.spec.substring(_uri.spec.indexOf(":") + 1, _uri.spec.length); // URI syntax "xowa:resource"
@@ -120,6 +120,8 @@ XowaChannel.prototype =
         Logger.log("Protocol :: Trying get "+this.xowa_resource);
        
         var this_channel = this;
+        
+        _listener.onStartRequest(/* nsIRequest */ this_channel, _context);
         
         var session = Xowa.new_session();
 
@@ -161,7 +163,7 @@ XowaChannel.prototype =
             var in_stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
             in_stream.setData(page_source, page_source.length);
             
-            _listener.onStartRequest(/* nsIRequest */ this_channel, _context);
+            
             _listener.onDataAvailable(/* nsIRequest */ this_channel, _context, in_stream, 0, in_stream.available());
             _listener.onStopRequest(/* nsIRequest */ this_channel, _context, Cr.NS_OK);
             

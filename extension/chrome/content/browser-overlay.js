@@ -1,0 +1,1 @@
+Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
