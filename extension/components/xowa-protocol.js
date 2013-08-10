@@ -8,16 +8,27 @@
   file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
-Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
-Components.utils.import("resource://xowa_viewer/logger.jsm");
-Components.utils.import("chrome://xowa_viewer/content/xowa-page.js");
-
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cr = Components.results;
 var Cu = Components.utils;
 var nsIIOService = Cc["@mozilla.org/network/io-service;1"].getService(Ci.nsIIOService);
+
+Components.utils.import("resource://gre/modules/XPCOMUtils.jsm");
+Components.utils.import("resource://xowa_viewer/xowa-interface.jsm");
+Components.utils.import("resource://xowa_viewer/logger.jsm");
+Components.utils.import("chrome://xowa_viewer/content/xowa-page.js");
+
+// Channel load flags
+
+var LOAD_DOCUMENT_URI = 1 << 16;  // Set (for example by the docshell) to indicate whether or not the channel corresponds to a document URI.
+var LOAD_RETARGETED_DOCUMENT_URI = 1 << 17;  // If the end consumer for this load has been retargeted after discovering its content, this flag will be set:
+var LOAD_REPLACE = 1 << 18;  // This flag is set to indicate that this channel is replacing another channel. 
+var LOAD_INITIAL_DOCUMENT_URI = 1 << 19;  // Set (for example by the docshell) to indicate whether or not the channel corresponds to an initial document URI load (for example link click).
+var LOAD_TARGETED = 1 << 20;  // Set (For example by the URILoader) to indicate whether or not the end consumer for this load has been determined.
+var LOAD_CALL_CONTENT_SNIFFERS = 1 << 21;  // If this flag is set, the channel should call the content sniffers
+var LOAD_CLASSIFY_URI = 1 << 22;  // This flag tells the channel to use URI classifier service to check the URI when opening the channel.
+
 
 var kSCHEME = "xowa";
 var kPROTOCOL_CONTRACTID = "@mozilla.org/network/protocol;1?name=" + kSCHEME;
@@ -72,7 +83,7 @@ XowaProtocol.prototype =
             }
         }
         
-        new_url = decodeURIComponent(new_url); // for not displaying escape sequences in status bar
+        new_url = decodeURIComponent(new_url); // for not displaying escape sequences (e.g. %0A) in status bar
         uri.spec = new_url;
         
         return uri;
@@ -122,6 +133,31 @@ XowaChannel.prototype =
         var this_channel = this;
         
         _listener.onStartRequest(/* nsIRequest */ this_channel, _context);
+        var window = this_channel._getInterface(Ci.nsIDOMWindow); // window created using this protocol
+        if(!window)
+            Logger.error("Protocol :: Cannot get DOMWindow");
+        
+        // Hackish workaround of not changing location bar when go to a link (see: https://groups.google.com/forum/#!topic/mozilla.dev.extensions/8JYpQCuwCRQ)
+        if(this_channel.loadFlags & LOAD_INITIAL_DOCUMENT_URI)
+        {
+            var main_window
+            if(window)
+            {
+                main_window = window.QueryInterface(Ci. nsIInterfaceRequestor) // get top Firefox DOMWindow coinaining the new tab (browser.xul)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIDocShellTreeItem)
+                                    .rootTreeItem
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIDOMWindow);
+            }
+            else // get last active window (may be a wrong browser window to change its location bar)
+                main_window = Cc["@mozilla.org/appshell/window-mediator;1"].getService(Ci.nsIWindowMediator).getMostRecentWindow("navigator:browser");
+            
+            // manually change location bar if loaded tab is the same as displayed one currently
+            if(main_window.gBrowser.selectedBrowser == main_window.gBrowser.getBrowserForDocument( window.document ))
+                main_window.gURLBar.value = this_channel.URI.spec; 
+        }
+        
         var session = Xowa.new_session();
 
         var xowa_res_escaped = this.xowa_resource.replace("'", "%27");
@@ -149,7 +185,7 @@ XowaChannel.prototype =
                 page_source = "Connection time out.";
                 break;
             case "SERVER_NOT_RUNNING": //TODO
-                page_source = "Server is not running.";
+                page_source = "Server is not running. Try refresh";
                 break;
             case "UNKNOWN_HOST":
                 page_source = "Unknown host. Probably wrong XOWA server host is set (check extensions.xowa_viewer.xowa_server_host in about:config)";
@@ -157,25 +193,21 @@ XowaChannel.prototype =
             default:
                 page_source = String(_connection_status);
                 break;
-            }
-            
+            }            
             var in_stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
             in_stream.setData(page_source, page_source.length);
             
+
             _listener.onDataAvailable(/* nsIRequest */ this_channel, _context, in_stream, 0, in_stream.available());
-            _listener.onStopRequest(/* nsIRequest */ this_channel, _context, Cr.NS_OK);
             
-            var window = this_channel._getInterface(Ci.nsIDOMWindow); // window created using this protocol
             if(window)
             {
                 window.XowaPageInfo = {};
                 window.XowaPageInfo.session_id = session.id;
                 XowaPage.xowa_page_injection(window);
-            }  
-            else
-            {
-                Logger.log("Protocol :: Cannot get DOMWindow");
             }
+            
+            _listener.onStopRequest(/* nsIRequest */ this_channel, _context, Cr.NS_OK);
         });
     },
     
@@ -205,7 +237,7 @@ XowaChannel.prototype =
         Logger.log("Protocol :: Called "+arguments.callee.name);
         throw Cr.NS_ERROR_NOT_IMPLEMENTED;
     },
-    isPending: function()
+    isPending: function() // for what is this function?
     {
         Logger.log("Protocol :: Called "+arguments.callee.name);
         return false;

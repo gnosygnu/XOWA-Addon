@@ -4,7 +4,7 @@
     <Description about="urn:mozilla:install-manifest">
         <em:type>2</em:type> <!-- 2 : Extension -->
         <em:id>xowa_viewer@piotrex</em:id>
-        <em:version>0.0.11</em:version>
+        <em:version>0.0.12</em:version>
         <em:name>XOWA Viewer</em:name>
         <em:creator>piotrex</em:creator>
         <em:targetApplication>
