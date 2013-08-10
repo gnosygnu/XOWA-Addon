@@ -106,7 +106,7 @@ XowaChannel.prototype =
     originalURI: null,
     contentCharset: "UTF-8",
     contentLength: 0,
-    contentType: "text/html",//"application/vnd.mozilla.xul+xml"
+    contentType: "text/html",
     owner: null,
     securityInfo: null,
     notificationCallbacks: null,
@@ -122,7 +122,6 @@ XowaChannel.prototype =
         var this_channel = this;
         
         _listener.onStartRequest(/* nsIRequest */ this_channel, _context);
-        
         var session = Xowa.new_session();
 
         var xowa_res_escaped = this.xowa_resource.replace("'", "%27");
@@ -162,7 +161,6 @@ XowaChannel.prototype =
             
             var in_stream = Cc["@mozilla.org/io/string-input-stream;1"].createInstance(Ci.nsIStringInputStream);
             in_stream.setData(page_source, page_source.length);
-            
             
             _listener.onDataAvailable(/* nsIRequest */ this_channel, _context, in_stream, 0, in_stream.available());
             _listener.onStopRequest(/* nsIRequest */ this_channel, _context, Cr.NS_OK);

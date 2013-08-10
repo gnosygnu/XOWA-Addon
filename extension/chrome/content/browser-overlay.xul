@@ -3,10 +3,12 @@
 
 <overlay id="xowa_viewer_overlay"
 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-    <commandset id="xowa-viewer_commandset">
+    <window id="main-window">
+        <commandset id="xowa-viewer_commandset">
         <command id="xowa-viewer_homepage" label="XOWA Home" tooltiptext="Open homepage of XOWA offline wiki" oncommand="gBrowser.selectedTab=gBrowser.addTab('xowa:home');"/>
-    </commandset>
+        </commandset>
+    </window>
+    
 
     <toolbarpalette id="BrowserToolbarPalette">
         <toolbarbutton id="xowa-viewer_button"
@@ -14,7 +16,7 @@ xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
     </toolbarpalette>
 
     <menupopup id="menu_ToolsPopup">
-        <menuitem id="xowa-viewer_menu" label="XOWA Home" oncommand="gBrowser.selectedTab=gBrowser.addTab('xowa:home');"/>
+        <menuitem id="xowa-viewer_menu" command="xowa-viewer_homepage"/>
     </menupopup>
 
 </overlay>
