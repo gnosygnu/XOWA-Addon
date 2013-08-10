@@ -24,14 +24,10 @@ var XowaPage =
         {
             var args = Array.prototype.slice.call(arguments, 1); // get args array without first arg (callback)
             
-            // build xowa.js.exec cmd formatted like "xowa_exec('arg0', 'arg1', 'arg2');"
-            var cmd = "xowa_exec(";
-            for (var i = 0, args_length = args.length ; i < args_length ; i++) 
-            {
-                if (i !== 0) cmd += ', ';                       // delimit if not 1st arg
-                cmd += "'" + args[i].replace(/'/g, "''") + "'"; // replace apos with double-apos
-            }
-            cmd += ");";
+            // build json of format '{"args":["arg0","arg1","arg2"]}'
+            var doc = {};
+            doc.args = args;
+            var cmd = JSON.stringify(doc);
             
             session.run_xowa_cmd_async("xowa.js.exec", cmd , 
             function(_result_type, _result, _connection_status) 
